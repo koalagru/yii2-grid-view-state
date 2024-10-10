@@ -1,5 +1,5 @@
 {
-  "name": "thrieu/yii2-grid-view-state",
+  "name": "koalagru/yii2-grid-view-state",
   "description": "Save filters from GridView to session, keep the filter state between pages.",
   "keywords": [
     "yii2",
@@ -8,7 +8,7 @@
     "gridview",
     "filter"
   ],
-  "homepage": "https://github.com/thrieu/yii2-grid-view-state",
+  "homepage": "https://github.com/koalagru/yii2-grid-view-state",
   "type": "yii2-extension",
   "license": "BSD 3-Clause",
   "authors": [
