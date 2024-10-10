@@ -8,8 +8,11 @@ use yii\grid\DataColumn;
 use yii\helpers\Html;
 use yii\base\InvalidParamException;
 use yii\helpers\ArrayHelper;
+use thrieu\grid\FilterStateTrait;
 
 class FilterStateBehavior extends Behavior {
+    use FilterStateTrait;
+
     const KEY_PREFIX = 'FilterStateBehavior';
     public $id;
 
@@ -41,20 +44,19 @@ class FilterStateBehavior extends Behavior {
         $session = Yii::$app->session;
         /** @var \yii\grid\GridView $gridView */
         $gridView = $this->gridView;
-        $this->state = FilterStateTrait::getFilterStateParams($this->id);
+        $this->state = self::getFilterStateParams($this->id);
         // Filter
         /** @var \yii\grid\DataColumn $column */
-        foreach ($gridView->columns as $column) {
 
-            if($column instanceof DataColumn
-                && $column->filter !== false
-                && $column->grid->filterModel instanceof \yii\base\Model
-                && $column->attribute !== null
-                && $column->grid->filterModel->isAttributeActive($column->attribute)) {
-                $this->composeFilterState($column);
+        if ($gridView->dataProvider->getPagination()!=false) {
+            $params = $gridView->dataProvider->getPagination()->params;
+            if (isset($params[$gridView->filterModel->formName()])) {
+                foreach ($params[$gridView->filterModel->formName()] as $attribute => $value) {
+                    $this->composeFilterState($attribute, $value);
+                }
             }
-            
         }
+
         // Sort
         if ($gridView->dataProvider->getSort() !== false) {
             $sort = $gridView->dataProvider->getSort();
@@ -86,38 +88,40 @@ class FilterStateBehavior extends Behavior {
      * Set filter state params, which is going to be set to session.
      * @param $column
      */
-    public function composeFilterState($column) {
-        if (!preg_match('/(^|.*\])([\w\.]+)(\[.*|$)/', $column->attribute, $matches)) {
+    public function composeFilterState($attribute, $value) {
+        if (!preg_match('/(^|.*\])([\w\.]+)(\[.*|$)/', $attribute, $matches)) {
             throw new InvalidParamException('Attribute name must contain word characters only.');
         }
 
-        $formName = $this->gridView->filterModel->formName();
-        $value = Html::getAttributeValue($this->gridView->filterModel, $column->attribute);
-        $keys = [$formName];
-        if ($matches[1] === '') {
-            $keys[] = $matches[2];
-            if ($matches[3] !== '') {
-                $keys[] = $matches[3];
-            }
-        } else {
-            $keys[] = $matches[1];
-            $keys[] = $matches[2];
-            if ($matches[3] !== '') {
-                $keys[] = $matches[3];
-            }
-        }
-
-        $s = &$this->state;
-        foreach ($keys as $key) {
-            if (end($keys) === $key) {
-                if($value === null) {
-                    $s[$key] = null;
-                } else if(is_array($s)) {
-                    $s[$key] = $value;
+        if (array_search($attribute, array_keys($this->gridView->filterModel->getAttributes()))!==false) {
+            $formName = $this->gridView->filterModel->formName();
+            $filterValue = Html::getAttributeValue($this->gridView->filterModel, $attribute);
+            $keys = [$formName];
+            if ($matches[1] === '') {
+                $keys[] = $matches[2];
+                if ($matches[3] !== '') {
+                    $keys[] = $matches[3];
                 }
             } else {
-                $s[$key] = isset($s[$key]) ? $s[$key] : [];
-                $s = &$s[$key];
+                $keys[] = $matches[1];
+                $keys[] = $matches[2];
+                if ($matches[3] !== '') {
+                    $keys[] = $matches[3];
+                }
+            }
+
+            $s = &$this->state;
+            foreach ($keys as $key) {
+                if (end($keys) === $key) {
+                    if($filterValue === null) {
+                        $s[$key] = null;
+                    } else if(is_array($s)) {
+                        $s[$key] = $filterValue;
+                    }
+                } else {
+                    $s[$key] = isset($s[$key]) ? $s[$key] : [];
+                    $s = &$s[$key];
+                }
             }
         }
     }
@@ -134,21 +138,19 @@ class FilterStateBehavior extends Behavior {
      * Builds a unique key for the GridView.
      * It determines uniqueness of the GridView by a glue string of the current action route and a specified ID.
      * @param string $id
-     * @param string $route  use for creating key for other route filter
      * @return string
      */
-    public static function buildKey($id, $route = null) {
-        return static::KEY_PREFIX . '_' . md5($route !== null ? $route : Yii::$app->controller->route.$id);
+    public static function buildKey($id) {
+        return static::KEY_PREFIX . '_' . md5(Yii::$app->controller->route.$id);
     }
 
     /**
      * Retrieve state params from session.
      * @param string $id
-     * @param string $route use for reading filter for other route filter
      * @return array
      */
-    public static function getState($id = null, $route = null) {
-        $state = Yii::$app->session->get(FilterStateBehavior::buildKey($id !== null ? $id : '', $route));
+    public static function getState($id = null) {        
+        $state = Yii::$app->session->get(FilterStateBehavior::buildKey($id !== null ? $id : ''));
         return $state !== null ? $state : [];
     }
 }

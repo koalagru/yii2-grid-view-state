@@ -1,6 +1,8 @@
 # yii2-grid-view-state
 Save filters from GridView to session, keep filter state between pages.
 
+Forked to fix compatibility with php 8.1 and get filters from $gridView->dataProvider->getPagination() instead of $gridView->columns due to compatibility issues with krajee Gridview.
+
 ## Features
 1. Very flexible. Separate setting and getting.
 2. Setting via behavior.
