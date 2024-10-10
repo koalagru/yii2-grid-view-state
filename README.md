@@ -10,16 +10,27 @@ Forked to fix compatibility with php 8.1 and get filters from $gridView->dataPro
 
 ## Installation
 
-To install, either run
+To install, add the repository
 
 ```
-php composer.phar require --prefer-dist thrieu/yii2-grid-view-state "dev-master"
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/koalagru/yii2-grid-view-state.git"
+    }
+],
+```
+
+either run
+
+```
+php composer.phar require --prefer-dist koalagru/yii2-grid-view-state "dev-master"
 ```
     
 or add
     
 ```
-"thrieu/yii2-grid-view-state": "dev-master"
+"koalagru/yii2-grid-view-state": "dev-master"
 ```
     
 to the require section of your `composer.json` file and then run `composer update`.
