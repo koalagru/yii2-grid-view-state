@@ -93,7 +93,7 @@ class FilterStateBehavior extends Behavior {
             throw new InvalidParamException('Attribute name must contain word characters only.');
         }
 
-        if (array_search($attribute, array_keys($this->gridView->filterModel->getAttributes()))!==false) {
+        if (array_search($attribute, array_keys($this->gridView->filterModel->getAttributes()))!==false || isset($this->gridView->filterModel->$attribute)) {
             $formName = $this->gridView->filterModel->formName();
             $filterValue = Html::getAttributeValue($this->gridView->filterModel, $attribute);
             $keys = [$formName];
